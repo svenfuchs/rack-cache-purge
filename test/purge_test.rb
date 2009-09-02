@@ -14,9 +14,7 @@ describe 'Rack::Cache::Purge' do
   end
 
   it 'purges entries on PURGE requests' do
-    respond_with 200, { 'Cache-Control' => 'public, max-age=10000' }, 'body' do |req, res|
-      fail('app should not be called on PURGE') if req.request_method == 'PURGE'
-    end
+    respond_with 200, { 'Cache-Control' => 'public, max-age=10000' }, 'body'
 
     get '/'
     cache.trace.should.include :store
@@ -26,13 +24,13 @@ describe 'Rack::Cache::Purge' do
 
     request 'purge', '/'
     cache.trace.should.include :pass
+    app.called?.should == false
 
     get '/'
     cache.trace.should.include :miss
   end
 
-  # %w(get post put delete).each do |request_method|
-  %w(get).each do |request_method|
+  %w(get post put delete).each do |request_method|
     it 'purges entries specified through X-Cache-Purge headers on #{request_method} requests' do
       respond_with 200, { 'Cache-Control' => 'public, max-age=500' }, 'body' do |req, res|
         if req.path == '/foo'
@@ -53,5 +51,24 @@ describe 'Rack::Cache::Purge' do
       get '/'
       cache.trace.should.include :miss
     end
+  end
+
+  it 'allows downstream apps to purge entries using env["rack-cache.purger"]' do
+    respond_with 200, { 'Cache-Control' => 'public, max-age=10000' }, 'body' do |req, res|
+      if req.path == '/foo'
+        req.env["rack-cache.purger"].purge('/')
+      end
+    end
+
+      get '/'
+      cache.trace.should.include :store
+
+      get '/'
+      cache.trace.should.include :fresh
+
+      post '/foo' # manually purges using env["rack-cache.purger"]
+
+      get '/'
+      cache.trace.should.include :miss
   end
 end
