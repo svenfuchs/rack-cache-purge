@@ -2,6 +2,8 @@ require 'rack/utils'
 
 module Rack::Cache::Tools
   class Key
+    include Rack::Utils
+
     # Implement .call, since it seems like the "Rack-y" thing to do. Plus, it
     # opens the door for cache key generators to just be blocks.
     def self.call(*args)
@@ -10,8 +12,7 @@ module Rack::Cache::Tools
 
     def initialize(request, uri = nil)
       self.request = request
-      self.uri = uri
-      expand_relative_uri! if uri
+      self.uri = uri if uri
     end
 
     attr_reader :request, :uri
@@ -44,6 +45,7 @@ module Rack::Cache::Tools
       def uri=(uri)
         uri  = URI.parse(uri) unless uri.respond_to?(:scheme)
         @uri = Uri.new(uri)
+        expand_relative_uri!
       end
 
       def expand_relative_uri!
@@ -53,8 +55,7 @@ module Rack::Cache::Tools
       end
 
       def irregular_port?
-        uri.scheme == "https" && uri.port != 443 ||
-        uri.scheme == "http" && uri.port != 80
+        scheme == "https" && port != 443 || scheme == "http" && port != 80
       end
 
       def normalize_query(query)
