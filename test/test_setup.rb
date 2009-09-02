@@ -19,7 +19,7 @@ require 'rack/cache'
 # Methods for constructing downstream applications / response
 # generators.
 module CacheContextHelpers
-  attr_reader :cache
+  attr_reader :app, :cache
 
   def setup_cache_context
     # holds each Rack::Cache::Context
@@ -50,14 +50,13 @@ module CacheContextHelpers
   # A basic response with 200 status code and a tiny body.
   def respond_with(status=200, headers={}, body=['Hello World'])
     called = false
-    backend = lambda do |env|
+    @app = lambda do |env|
       called = true
       response = Rack::Response.new(body, status, headers)
       request = Rack::Request.new(env)
       yield request, response if block_given?
       response.finish
     end
-    @app = Rack::Cache::Purge.new(backend, :allow_http_purge => true)
     @app.meta_def(:called?) { called }
     @app.meta_def(:reset!) { called = false }
     @app
@@ -67,23 +66,21 @@ module CacheContextHelpers
     @cache_config = block
   end
 
-  def request(method, uri='/', opts={})
-    opts = {
-      'rack.run_once' => true,
-      'rack.errors' => @errors,
-      'rack-cache.storage' => @storage,
-      'rack-cache.allow_http_purge' => true
-    }.merge(opts)
-
+  def request(method, uri = '/', env = {})
     fail 'response not specified (use respond_with)' if @app.nil?
     @app.reset! if @app.respond_to?(:reset!)
 
-    @cache_prototype ||= Rack::Cache::Context.new(@app, &@cache_config)
-    @cache = @cache_prototype.clone
-    @caches << @cache
+    @purge   = Rack::Cache::Purge.new(@app, :allow_http_purge => true)
+    @cache   = Rack::Cache::Context.new(@purge, &@cache_config)
     @request = Rack::MockRequest.new(@cache)
-    yield @cache if block_given?
-    @response = @request.request(method.to_s.upcase, uri, opts)
+
+    env = {
+      'rack.run_once' => true,
+      'rack.errors' => @errors,
+      'rack-cache.storage' => @storage
+    }.merge(env)
+
+    @response = @request.request(method.to_s.upcase, uri, env)
     @responses << @response
     @response
   end

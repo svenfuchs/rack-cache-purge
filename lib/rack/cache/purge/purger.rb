@@ -1,19 +1,19 @@
 module Rack::Cache::Purge
   class Purger
-    attr_reader :cache
+    attr_reader :context
 
-    def initialize(cache)
-      @cache = cache
+    def initialize(context)
+      @context = context
     end
 
-    def purge(request, *args)
-      case args.first
-      when NilClass
-        purge_by_request(request)
+    def purge(arg)
+      case arg
+      when Rack::Request
+        purge_by_request(arg)
       when Rack::Cache::Response
-        purge_by_uris(request, args.first.headers[PURGE_HEADER])
+        purge_by_uris(arg.headers[PURGE_HEADER])
       else
-        purge_by_uris(request, args)
+        purge_by_uris(arg)
       end
     end
 
@@ -24,9 +24,9 @@ module Rack::Cache::Purge
         do_purge(key)
       end
       
-      def purge_by_uris(request, uris)
+      def purge_by_uris(uris)
         normalize_uris(uris).each do |uri|
-          key = Rack::Cache::Tools::Key.call(request, uri)
+          key = Rack::Cache::Tools::Key.call(context.request, uri)
           do_purge(key)
         end
       end
@@ -41,12 +41,12 @@ module Rack::Cache::Purge
       end
 
       def metastore
-        uri = cache.env['rack-cache.metastore']
+        uri = context.env['rack-cache.metastore']
         storage.resolve_metastore_uri(uri)
       end
 
       def entitystore
-        uri = cache.env['rack-cache.entitystore']
+        uri = context.env['rack-cache.entitystore']
         storage.resolve_metastore_uri(uri)
       end
 

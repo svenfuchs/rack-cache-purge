@@ -5,7 +5,7 @@ module Rack::Cache::Purge
     # Enable http purge support, disabled by default
     option_accessor :allow_http_purge
 
-    attr_reader :env
+    attr_reader :env, :request
 
     def initialize(backend, options = {})
       @backend = backend
@@ -19,7 +19,8 @@ module Rack::Cache::Purge
     end
 
     def call(env)
-      @env = env
+      # hmmm ...
+      @env = env.merge('rack-cache.allow_http_purge' => allow_http_purge?, 'rack-cache.purger' => purger)
       @request = Rack::Cache::Request.new(env)
 
       response =
@@ -29,7 +30,7 @@ module Rack::Cache::Purge
           forward
         end
 
-      purger.purge(@request, response) if response.headers.key?(PURGE_HEADER)
+      purger.purge(response) if response.headers.key?(PURGE_HEADER)
 
       response.to_a
     end
