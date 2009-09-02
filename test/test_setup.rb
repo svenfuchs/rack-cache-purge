@@ -57,7 +57,7 @@ module CacheContextHelpers
       yield request, response if block_given?
       response.finish
     end
-    @app = Rack::Cache::Purge.new(backend)
+    @app = Rack::Cache::Purge.new(backend, :allow_http_purge => true)
     @app.meta_def(:called?) { called }
     @app.meta_def(:reset!) { called = false }
     @app
@@ -71,7 +71,8 @@ module CacheContextHelpers
     opts = {
       'rack.run_once' => true,
       'rack.errors' => @errors,
-      'rack-cache.storage' => @storage
+      'rack-cache.storage' => @storage,
+      'rack-cache.allow_http_purge' => true
     }.merge(opts)
 
     fail 'response not specified (use respond_with)' if @app.nil?
