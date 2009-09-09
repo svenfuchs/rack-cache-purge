@@ -1,6 +1,6 @@
 module Rack::Cache::Purge
   class Context
-    include Rack::Cache::Tools::Options
+    include Rack::Cache::Utils::Options
 
     # Enable http purge support, disabled by default
     option_accessor :allow_http_purge
@@ -30,7 +30,7 @@ module Rack::Cache::Purge
           forward
         end
 
-      purger.purge(response) if response.headers.key?(PURGE_HEADER)
+      purger.purge(response) if response.headers.key?(Rack::Cache::PURGE_HEADER)
 
       response.to_a
     end

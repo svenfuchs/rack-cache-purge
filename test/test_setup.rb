@@ -74,11 +74,7 @@ module CacheContextHelpers
     @cache   = Rack::Cache::Context.new(@purge, &@cache_config)
     @request = Rack::MockRequest.new(@cache)
 
-    env = {
-      'rack.run_once' => true,
-      'rack.errors' => @errors,
-      'rack-cache.storage' => @storage
-    }.merge(env)
+    env = { 'rack.run_once' => true }.merge(env)
 
     @response = @request.request(method.to_s.upcase, uri, env)
     @responses << @response

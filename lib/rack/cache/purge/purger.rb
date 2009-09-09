@@ -11,7 +11,7 @@ module Rack::Cache::Purge
       when Rack::Request
         purge_by_request(arg)
       when Rack::Cache::Response
-        purge_by_uris(arg.headers[PURGE_HEADER])
+        purge_by_uris(arg.headers[Rack::Cache::PURGE_HEADER])
       else
         purge_by_uris(arg)
       end
@@ -26,7 +26,7 @@ module Rack::Cache::Purge
       
       def purge_by_uris(uris)
         normalize_uris(uris).each do |uri|
-          key = Rack::Cache::Tools::Key.call(context.request, uri)
+          key = Rack::Cache::Utils::Key.call(context.request, uri)
           do_purge(key)
         end
       end
@@ -48,6 +48,11 @@ module Rack::Cache::Purge
       def entitystore
         uri = context.env['rack-cache.entitystore']
         storage.resolve_metastore_uri(uri)
+      end
+
+      def tagstore
+        uri = context.env['rack-cache.tagstore']
+        storage.resolve_tagstore_uri(uri)
       end
 
       def storage

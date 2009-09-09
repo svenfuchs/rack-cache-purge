@@ -1,15 +1,17 @@
 require 'uri'
 require 'rack/cache'
 require 'rack/cache/storage'
-require 'rack/cache/tools'
+require 'rack/cache/utils'
 
-module Rack::Cache::Purge
-  autoload :Context, 'rack/cache/purge/context'
-  autoload :Purger,  'rack/cache/purge/purger'
-
+module Rack::Cache
   PURGE_HEADER = 'X-Cache-Purge'
 
-  def self.new(backend, options={}, &b)
-    Context.new(backend, options, &b)
+  module Purge
+    autoload :Context, 'rack/cache/purge/context'
+    autoload :Purger,  'rack/cache/purge/purger'
+
+    def self.new(backend, options={}, &b)
+      Context.new(backend, options, &b)
+    end
   end
 end
