@@ -1,62 +1,48 @@
-module Rack::Cache::Purge
-  class Purger
-    attr_reader :context
+require 'rack/cache/key'
+require 'rack/mock'
 
-    def initialize(context)
-      @context = context
-    end
+module Rack
+  module Cache
+    class Purge
+      class Purger
+        attr_reader :env
 
-    def purge(arg)
-      case arg
-      when Rack::Request
-        purge_by_request(arg)
-      when Rack::Cache::Response
-        purge_by_uris(arg.headers[Rack::Cache::PURGE_HEADER])
-      else
-        purge_by_uris(arg)
-      end
-    end
-
-    protected
-    
-      def purge_by_request(request)
-        key = metastore.cache_key(request)
-        do_purge(key)
-      end
-      
-      def purge_by_uris(uris)
-        normalize_uris(uris).each do |uri|
-          key = Rack::Cache::Utils::Key.call(context.request, uri)
-          do_purge(key)
+        def initialize(env)
+          @env = env
         end
-      end
-      
-      def normalize_uris(uris)
-        Array(uris).flatten.join("\n").split("\n")
-      end
-      
-      def do_purge(key)
-        metastore.purge(key)
-        entitystore.purge(key)
+
+        def purge(uris)
+          normalize_uris(uris).map do |uri|
+            key = key_for(uri)
+            metastore.purge(key)
+            entitystore.purge(key)
+          end
+        end
+
+        protected
+
+          def normalize_uris(uris)
+            Array(uris).flatten.join("\n").split("\n")
+          end
+
+          def key_for(uri)
+            Rack::Cache::Key.call(Rack::Cache::Request.new(env_for(uri)))
+          end
+
+          def env_for(*args)
+            Rack::MockRequest.env_for(*args)
+          end
+        
+          def metastore
+            @metastore ||= Rack::Cache::Storage.instance.resolve_metastore_uri(env['rack-cache.metastore'])
+          end
+        
+          def entitystore
+            @entitystore ||= Rack::Cache::Storage.instance.resolve_entitystore_uri(env['rack-cache.entitystore'])
+          end
       end
 
-      def metastore
-        uri = context.env['rack-cache.metastore']
-        storage.resolve_metastore_uri(uri)
-      end
-
-      def entitystore
-        uri = context.env['rack-cache.entitystore']
-        storage.resolve_metastore_uri(uri)
-      end
-
-      def tagstore
-        uri = context.env['rack-cache.tagstore']
-        storage.resolve_tagstore_uri(uri)
-      end
-
-      def storage
-        Rack::Cache::Storage.instance
-      end
+      include Base
+    end
   end
 end

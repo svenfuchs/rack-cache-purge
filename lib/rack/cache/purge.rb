@@ -1,17 +1,20 @@
-require 'uri'
-require 'rack/cache'
-require 'rack/cache/storage'
-require 'rack/cache/utils'
+module Rack
+  module Cache
+    class Purge
+      class << self
+        def allow_http_purge!
+          include Rack::Cache::Purge::Http
+        end
+      end
+      
+      PURGE_HEADER  = 'rack-cache.purge'
+      PURGER_HEADER = 'rack-cache.purger'
 
-module Rack::Cache
-  PURGE_HEADER = 'X-Cache-Purge'
-
-  module Purge
-    autoload :Context, 'rack/cache/purge/context'
-    autoload :Purger,  'rack/cache/purge/purger'
-
-    def self.new(backend, options={}, &b)
-      Context.new(backend, options, &b)
+      autoload :Base,   'rack/cache/purge/base'
+      autoload :Http,   'rack/cache/purge/http'
+      autoload :Purger, 'rack/cache/purge/purger'
+      
+      include Base
     end
   end
 end
