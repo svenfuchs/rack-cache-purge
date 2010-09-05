@@ -17,7 +17,7 @@ class Test::Unit::TestCase
       response = Rack::Response.new(body, status, headers)
       yield request, response if block_given?
       response.finish
-    }))
+    }, :allow_http_purge => true))
   end
   
   def get(url)

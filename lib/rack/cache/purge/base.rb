@@ -4,7 +4,8 @@ module Rack
       module Base
         attr_reader :app, :purger
 
-        def initialize(app)
+        def initialize(app, options = {})
+          self.class.allow_http_purge! if options[:allow_http_purge]
           @app = app
         end
 
