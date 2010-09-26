@@ -45,7 +45,7 @@ class Test::Unit::TestCase
   end
   
   def request_for(uri, options = {})
-    Rack::Request.new(env_for('http://example.com/foo').merge(options))
+    Rack::Request.new(env_for(uri).merge(options))
   end
   
   def env_for(*args)
