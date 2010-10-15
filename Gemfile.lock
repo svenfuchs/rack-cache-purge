@@ -1,0 +1,21 @@
+PATH
+  remote: .
+  specs:
+    rack-cache-purge (0.0.2)
+      rack-cache (~> 0.5)
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    rack (1.2.1)
+    rack-cache (0.5.3)
+      rack (>= 0.4)
+    test_declarative (0.0.4)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  rack-cache (~> 0.5)
+  rack-cache-purge!
+  test_declarative
