@@ -19,5 +19,6 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'rack-cache', '~> 0.5'
 
+  s.add_development_dependency 'ruby-debug'
   s.add_development_dependency 'test_declarative'
 end

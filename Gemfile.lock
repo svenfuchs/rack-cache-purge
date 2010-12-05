@@ -7,9 +7,16 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
+    columnize (0.3.2)
+    linecache (0.43)
     rack (1.2.1)
     rack-cache (0.5.3)
       rack (>= 0.4)
+    ruby-debug (0.10.4)
+      columnize (>= 0.1)
+      ruby-debug-base (~> 0.10.4.0)
+    ruby-debug-base (0.10.4)
+      linecache (>= 0.3)
     test_declarative (0.0.4)
 
 PLATFORMS
@@ -18,4 +25,8 @@ PLATFORMS
 DEPENDENCIES
   rack-cache (~> 0.5)
   rack-cache-purge!
+  ruby-debug
   test_declarative
+
+METADATA
+  version: 1.0.6
